@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>DataVex Lead Intelligence</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body { margin:0; font-family:Arial; background:#f3f4f6; }
+header { background:#2563eb; color:white; padding:20px; text-align:center; }
+.container { max-width:1000px; margin:auto; padding:20px; }
+
+input { padding:10px; width:70%; border-radius:6px; border:1px solid #ccc; }
+button { padding:10px 15px; border:none; background:#2563eb; color:white; border-radius:6px; cursor:pointer; }
+
+.card { background:white; padding:20px; margin-top:20px; border-radius:10px; box-shadow:0 4px 8px rgba(0,0,0,0.05); }
+
+.badge { background:#dcfce7; color:#166534; padding:5px 10px; border-radius:20px; margin-right:5px; display:inline-block; }
+
+.score { font-size:40px; font-weight:bold; }
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>DataVex Lead Intelligence Engine</h1>
+</header>
+
+<div class="container">
+
+<input type="text" id="domain" placeholder="Enter company domain">
+<button onclick="analyze()">Analyze</button>
+
+<div class="card">
+<h3>Overview</h3>
+<p><strong>Industry:</strong> <span id="industry"></span></p>
+<p><strong>Growth Stage:</strong> <span id="growth"></span></p>
+<p><strong>Tech Focus:</strong> <span id="tech"></span></p>
+</div>
+
+<div class="card">
+<h3>Lead Score</h3>
+<div class="score" id="score"></div>
+<p id="verdict"></p>
+</div>
+
+<div class="card">
+<h3>Signals</h3>
+<div id="signals"></div>
+</div>
+
+<div class="card">
+<h3>Reasoning</h3>
+<p id="reasoning"></p>
+</div>
+
+<div class="card">
+<h3>Email</h3>
+<p><strong>Subject:</strong> <span id="email_subject"></span></p>
+<p id="email_body"></p>
+</div>
+
+</div>
+
+<script>
+async function analyze() {
+
+    const domain = document.getElementById("domain").value;
+
+    if(!domain){
+        alert("Enter company domain");
+        return;
+    }
+
+    const response = await fetch("/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domain })
+    });
+
+    const result = await response.json();
+
+    if (result.error) {
+        document.getElementById("industry").innerText = "";
+        document.getElementById("score").innerText = "Error";
+        document.getElementById("verdict").innerText = result.error;
+        document.getElementById("signals").innerHTML = "";
+        document.getElementById("reasoning").innerText = "";
+        document.getElementById("email_subject").innerText = "";
+        document.getElementById("email_body").innerText = "";
+        return;
+    }
+
+    document.getElementById("industry").innerText = result.industry || "";
+    document.getElementById("growth").innerText = result.growth_stage || "";
+    document.getElementById("tech").innerText = result.tech_focus || "";
+    document.getElementById("score").innerText = result.score ?? "";
+    document.getElementById("verdict").innerText = result.verdict || "";
+
+    const signals = Array.isArray(result.signals) ? result.signals : [];
+    document.getElementById("signals").innerHTML = signals
+        .map(s => `<span class="badge">${s}</span>`)
+        .join("");
+
+    document.getElementById("reasoning").innerText = result.reasoning || "";
+    document.getElementById("email_subject").innerText = result.email_subject || "";
+    document.getElementById("email_body").innerText = result.email_body || "";
+}
+</script>
+
+</body>
+</html>
